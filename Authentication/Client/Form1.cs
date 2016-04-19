@@ -14,7 +14,8 @@ namespace Client
 
         private void btnCreate_Click(object sender, EventArgs e)
         {
-            string token = authService.CreateToken(1, "Admin");
+            string timeOut = System.Configuration.ConfigurationManager.AppSettings["cacheTimeOut"];
+            string token = authService.CreateToken(1, "Admin", Convert.ToInt32(timeOut));
             txtToken.Text = token != null ? token : "Invalid Login";
         }
 

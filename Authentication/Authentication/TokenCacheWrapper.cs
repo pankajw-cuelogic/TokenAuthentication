@@ -8,20 +8,20 @@ namespace Authentication
     /// </summary>
     internal class TokenCacheWrapper
     {
-        private static ObjectCache cache = MemoryCache.Default;
-        
+        private static ObjectCache _cache = MemoryCache.Default;
+
         /// <summary>
         /// Reason : To add token in cache
         /// </summary>
-        /// <param name="cacheKey"></param>
-        /// <param name="token"></param>
-        /// <param name="minutes"></param>
+        /// <param name="cacheKey">cacheKey</param>
+        /// <param name="token">token</param>
+        /// <param name="minutes">minutes</param>
         public void AddToken(string cacheKey, object token, int minutes)
         {
-            cache.Remove(cacheKey);
+            _cache.Remove(cacheKey);
             if (token != null)
             {
-                cache.Add(cacheKey, token, DateTime.Now.AddMinutes(minutes));
+                _cache.Add(cacheKey, token, DateTime.Now.AddMinutes(minutes));
             }
         }
 
@@ -32,7 +32,7 @@ namespace Authentication
         /// <returns></returns>
         public object GetToken(string cacheKey)
         {
-            return cache.Get(cacheKey);
+            return _cache.Get(cacheKey);
         }
     }
 }

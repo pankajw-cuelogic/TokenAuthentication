@@ -6,8 +6,8 @@ namespace Authentication
 {
     public sealed class Token
     {
-        private TokenCacheWrapper memory = new TokenCacheWrapper();
-        const string DefaultCacheTimeout = "60";
+        private TokenCacheWrapper _cacheWrapper = new TokenCacheWrapper();
+        const int DefaultCacheTimeout = 60;
 
         /// <summary>
         /// Reason : To genrate token and save it into system
@@ -15,10 +15,10 @@ namespace Authentication
         /// <param name="userId">user id</param>
         /// <param name="userName">user name</param>
         /// <param name="password">password</param>
+        /// <param name="cacheTimeOut">cacheTimeOut in minute. If less than zero then default cache time is 60 min</param>
         /// <returns>Return token if authenticated else return null</returns>
-        public string CreateToken(object userId, object userRole)
+        public string CreateToken(object userId, object userRole, int cacheTimeOut)
         {
-            //string token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
             byte[] time = BitConverter.GetBytes(DateTime.UtcNow.ToBinary());
             byte[] key = Guid.NewGuid().ToByteArray();
            
@@ -26,16 +26,14 @@ namespace Authentication
             time.CopyTo(merged, 0);
             key.CopyTo(merged, time.Length);
             string token = Convert.ToBase64String(key);
+            cacheTimeOut = cacheTimeOut <= 0 ? DefaultCacheTimeout : cacheTimeOut;
 
-            string timeOut = System.Configuration.ConfigurationManager.AppSettings["cacheTimeOut"];
-            timeOut = string.IsNullOrEmpty(timeOut) ? DefaultCacheTimeout : timeOut;
-            
             UserDetails userDetails = new UserDetails();
             userDetails.UserId = userId;
             userDetails.Role = userRole; 
             userDetails.Token = token;
 
-            memory.AddToken(token, userDetails, Convert.ToInt32(timeOut));
+            _cacheWrapper.AddToken(token, userDetails, cacheTimeOut);
 
             return token;
         }
@@ -51,17 +49,17 @@ namespace Authentication
             if (string.IsNullOrEmpty(token))
                 return false;
 
-            return (memory.GetToken(token) != null);
+            return (_cacheWrapper.GetToken(token) != null);
         }
 
         /// <summary>
         /// Reason : To get user details
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="token">Get user details by token</param>
         /// <returns></returns>
         public UserDetails GetUserDetails(string token)
         {
-           return (UserDetails)memory.GetToken(token);
+           return (UserDetails)_cacheWrapper.GetToken(token);
         }
     }
 }
