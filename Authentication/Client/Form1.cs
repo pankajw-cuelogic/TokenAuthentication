@@ -15,8 +15,9 @@ namespace Client
         private void btnCreate_Click(object sender, EventArgs e)
         {
             string timeOut = System.Configuration.ConfigurationManager.AppSettings["cacheTimeOut"];
-            string token = authService.CreateToken(1, "Admin", Convert.ToInt32(timeOut));
-            txtToken.Text = token != null ? token : "Invalid Login";
+            string token = null;
+            string message= authService.CreateToken(1, "Admin", Convert.ToInt32(timeOut), ref token);
+            txtToken.Text = token != null ? token : lblMessage.Text = message;
         }
 
         private void btnValidate_Click(object sender, EventArgs e)

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
 
 namespace Authentication
 {
@@ -10,32 +8,56 @@ namespace Authentication
         const int DefaultCacheTimeout = 60;
 
         /// <summary>
-        /// Reason : To genrate token and save it into system
+        /// Reason : Overload method, to genrate token and save it into system. Token return in ref variable if authenticated.
         /// </summary>
-        /// <param name="userId">user id</param>
+        /// <param name="userId">user id string</param>
+        /// <param name="userName">user name</param>
+        /// <param name="password">password</param>
+        /// <param name="cacheTimeOut">cacheTimeOut in minute. If less than zero then default cache time is 60 min</param>
+        /// <returns>Return token success if authenticated else return error message</returns>
+        public string CreateToken(string userId, string userRole, int cacheTimeOut, ref string token)
+        {
+            if (string.IsNullOrWhiteSpace((string)userId) || string.IsNullOrWhiteSpace((string)userRole))
+                return Message.InvalidInput;
+
+            return CreateToken((object)userId, userRole, cacheTimeOut, ref token);
+        }
+
+        /// <summary>
+        /// Reason : To genrate token and save it into system. Return token if authenticated else return null
+        /// </summary>
+        /// <param name="userId">user id int</param>
         /// <param name="userName">user name</param>
         /// <param name="password">password</param>
         /// <param name="cacheTimeOut">cacheTimeOut in minute. If less than zero then default cache time is 60 min</param>
         /// <returns>Return token if authenticated else return null</returns>
-        public string CreateToken(object userId, object userRole, int cacheTimeOut)
+        public string CreateToken(int userId, string userRole, int cacheTimeOut, ref string token)
+        {
+            if (userId <= 0 || string.IsNullOrWhiteSpace((string)userRole))
+                return Message.InvalidInput;
+
+            return CreateToken((object)userId, userRole, cacheTimeOut, ref token);
+        }
+
+        private string CreateToken(object userId, string userRole, int cacheTimeOut, ref string token)
         {
             byte[] time = BitConverter.GetBytes(DateTime.UtcNow.ToBinary());
             byte[] key = Guid.NewGuid().ToByteArray();
-           
+
             var merged = new byte[time.Length + key.Length];
             time.CopyTo(merged, 0);
             key.CopyTo(merged, time.Length);
-            string token = Convert.ToBase64String(key);
+            token = Convert.ToBase64String(key);
             cacheTimeOut = cacheTimeOut <= 0 ? DefaultCacheTimeout : cacheTimeOut;
 
             UserDetails userDetails = new UserDetails();
             userDetails.UserId = userId;
-            userDetails.Role = userRole; 
+            userDetails.Role = userRole;
             userDetails.Token = token;
 
             _cacheWrapper.AddToken(token, userDetails, cacheTimeOut);
 
-            return token;
+            return Message.Success;
         }
 
         /// <summary>
@@ -59,7 +81,9 @@ namespace Authentication
         /// <returns></returns>
         public UserDetails GetUserDetails(string token)
         {
-           return (UserDetails)_cacheWrapper.GetToken(token);
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
+            return (UserDetails)_cacheWrapper.GetToken(token);
         }
     }
 }
