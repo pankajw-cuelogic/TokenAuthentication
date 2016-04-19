@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Message.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenCacheWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
